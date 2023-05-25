@@ -39,10 +39,11 @@ def index(request):
         threads=True, # Set thread value to true
         
         # used for access data[ticker]
-        period='1mo', 
+        period='120mo', 
         interval='1d'
     
     )
+    print(data.shape)
 
     data.reset_index(level=0, inplace=True)
 
@@ -185,48 +186,45 @@ def predict(request, ticker_value, number_of_days):
 
     # ========================================== Machine Learning ==========================================
 
-
     try:
-        df_ml = yf.download(tickers = ticker_value, period='12mo', interval='1h')
+        df_ml = yf.download(tickers=ticker_value, period='12mo', interval='1h')
     except:
         ticker_value = 'AAPL'
-        df_ml = yf.download(tickers = ticker_value, period='12mo', interval='1m')
+        df_ml = yf.download(tickers=ticker_value, period='12mo', interval='1m')
 
-    # Fetching ticker values from Yahoo Finance API 
+    # Extracting relevant columns from the data
     df_ml = df_ml[['Adj Close']]
     forecast_out = int(number_of_days)
     df_ml['Prediction'] = df_ml[['Adj Close']].shift(-forecast_out)
-    # Splitting data for Test and Train
-    X = np.array(df_ml.drop(['Prediction'],1))
+
+    # Preparing data for model training and prediction
+    X = np.array(df_ml.drop(['Prediction'], 1))
     X = preprocessing.scale(X)
     X_forecast = X[-forecast_out:]
     X = X[:-forecast_out]
     y = np.array(df_ml['Prediction'])
     y = y[:-forecast_out]
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size = 0.2)
-    # Applying Linear Regression
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
+
+    # Training the linear regression model
     clf = LinearRegression()
-    clf.fit(X_train,y_train)
+    clf.fit(X_train, y_train)
+
     # Prediction Score
     confidence = clf.score(X_test, y_test)
 
-    # Calculate MSE
+    # Evaluating the model performance on the test data
     mse = mean_squared_error(y_test, clf.predict(X_test))
-    print("MSE", mse)
-
-    # Calculate RMSE
     rmse = mean_squared_error(y_test, clf.predict(X_test), squared=False)
-    print("RMSE", rmse)
-
-    # Calculate MAE
     mae = mean_absolute_error(y_test, clf.predict(X_test))
-    print("MAE", mae)
-
-    # Calculate R2 score
     r2 = r2_score(y_test, clf.predict(X_test))
-    print("R2", r2)
-    
-    # Predicting for 'n' days stock data
+
+    print("MSE:", mse)
+    print("RMSE:", rmse)
+    print("MAE:", mae)
+    print("R2 Score:", r2)
+
+    # Predicting the stock price for the forecast period
     forecast_prediction = clf.predict(X_forecast)
     forecast = forecast_prediction.tolist()
 
@@ -286,4 +284,8 @@ def predict(request, ticker_value, number_of_days):
                                                     'Volume':Volume,
                                                     'Sector':Sector,
                                                     'Industry':Industry,
+                                                    'mse': mse,
+                                                    'rmse': rmse,
+                                                    'mae': mae,
+                                                    'r2': r2,
                                                     })

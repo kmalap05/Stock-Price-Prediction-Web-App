@@ -25,9 +25,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 
 
-# The Home page when Server loads up
+# The Home page
 def index(request):
-    # ================================================= Left Card Plot =========================================================
+    # ================================================= Left Card Plot ========================================================
     # Here we use yf.download function
     data = yf.download(
         
@@ -184,7 +184,7 @@ def predict(request, ticker_value, number_of_days):
 
 
 
-    # ========================================== Machine Learning ==========================================
+    # ====== Machine Learning ======
 
     try:
         df_ml = yf.download(tickers=ticker_value, period='12mo', interval='1h')
@@ -229,7 +229,7 @@ def predict(request, ticker_value, number_of_days):
     forecast = forecast_prediction.tolist()
 
 
-    # ========================================== Plotting predicted data ======================================
+    # ======== Plotting predicted data ==========
 
 
     pred_dict = {"Date": [], "Prediction": []}
@@ -243,7 +243,7 @@ def predict(request, ticker_value, number_of_days):
     pred_fig.update_layout(paper_bgcolor="#14151b", plot_bgcolor="#14151b", font_color="white")
     plot_div_pred = plot(pred_fig, auto_open=False, output_type='div')
 
-    # ========================================== Display Ticker Info ==========================================
+    # ======== Display Ticker Info =======
 
     ticker = pd.read_csv('app/Data/Tickers.csv')
     to_search = ticker_value
@@ -264,7 +264,7 @@ def predict(request, ticker_value, number_of_days):
             Industry = ticker.Industry[i]
             break
 
-    # ========================================== Page Render section ==========================================
+    # ======== Page Render section =========
     
 
     return render(request, "result.html", context={ 'plot_div': plot_div, 
